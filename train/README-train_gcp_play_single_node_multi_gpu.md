@@ -5,6 +5,7 @@
 * 計算環境: g2, 1 node, 1 GPU (Nvidia L4 24GB)
   * 例: `$ srun --partition g2 --nodes=1 --gpus-per-node=1 --time=04:00:00 -c 12 --pty bash -i`
 
+
 ## Step 0. 環境構築
 
 このステップでの目標は、下記のようなディレクトリ構造の状態になることです。
