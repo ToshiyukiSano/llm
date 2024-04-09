@@ -222,12 +222,77 @@ $ conda install pytorch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0 pytorch-cud
 
 # W&Bにログインしていることを確認。
 (.venv) $ cat ~/.netrc
-
+```
+```sh
+##### （分割してないシェルスクリプトの場合）
 # 事前学習スクリプトを実行。
 (.venv) $ bash ./gcp_node-1_gpu/dataset-arxiv_tokenizer-sentencepiece_model-gpt_0.125B/zero-0_dp-1_pp-1_tp-1_flashattn2-on.sh \
     --input_tokenizer_file ~/ucllm_nedo_dev/train/output/step1_train_tokenizer/botchan/botchan.model \
     --output_model_dir ~/ucllm_nedo_dev/train/output/step2_pretrain_model/ \
     --save_interval 1000
+```
+```sh
+##### （分割したシェルスクリプトの場合）
+# JSONファイルのダウンロード
+cd ~/ucllm_nedo_dev/train/scripts/step2_pretrain_model
+
+使用法：
+bash ./gcp_node-1_gpu/dataset-arxiv_tokenizer-sentencepiece_model-gpt_0.125B/zero-0_dp-1_pp-1_tp-1_flashattn2-on_0_download.sh    \
+      --json_url 学習に用いるJSONファイルのURL /
+      --json_dir JSONファイルの保存先ディレクトリ
+
+例：
+bash ./gcp_node-1_gpu/dataset-arxiv_tokenizer-sentencepiece_model-gpt_0.125B/zero-0_dp-1_pp-1_tp-1_flashattn2-on_0_download.sh  \
+	--json_url https://data.together.xyz/redpajama-data-1T/v1.0.0/arxiv/arxiv_024de5df-1b7f-447c-8c3a-51407d8d6732.jsonl \
+	--json_dir ~/ucllm_nedo_dev/train/Megatron-DeepSpeed/dataset/
+      
+※　ファイルは、--json_dir で指定したディレクトリ内に　arxiv.jsonl として保存される。
+
+# トークナイズ
+
+使用法
+bash ./gcp_node-1_gpu/dataset-arxiv_tokenizer-sentencepiece_model-gpt_0.125B/zero-0_dp-1_pp-1_tp-1_flashattn2-on_1_tokenize.sh   \
+     --input_tokenizer_file トークナイザーファイル \
+     --json_dir  トークナイズするJSONファイルの置き場所。出力もこのディレクトリに入る。 \
+     --workers ワーカーの数
+ 
+例：
+bash ./gcp_node-1_gpu/dataset-arxiv_tokenizer-sentencepiece_model-gpt_0.125B/zero-0_dp-1_pp-1_tp-1_flashattn2-on_1_tokenize.sh   \
+   --input_tokenizer_file $MYHOME/data/tokenizer/botchan_jp/botchan_jp.model \
+    --json_dir  ~/ucllm_nedo_dev/train/Megatron-DeepSpeed/dataset/   \
+    --workers 8
+
+# 事前学習
+
+使用法：
+bash ./gcp_node-1_gpu/dataset-arxiv_tokenizer-sentencepiece_model-gpt_0.125B/zero-0_dp-1_pp-1_tp-1_flashattn2-on_2_pretrain.sh  \
+		--input_tokenizer_file 入力するトークナイザーファイル  \
+		--output_model_dir モデルを出力するディレクトリ  \
+		--save_interval 何回ごとに保存するか \
+		--json_dir   学習用のデータがあるディレクトリ \
+		--config_yaml 設定ファイル（yaml）
+		
+
+使用例：
+bash ./gcp_node-1_gpu/dataset-arxiv_tokenizer-sentencepiece_model-gpt_0.125B/zero-0_dp-1_pp-1_tp-1_flashattn2-on_2_pretrain.sh    \
+			--input_tokenizer_file $MYHOME/data/tokenizer/botchan_jp/botchan_jp.model   \
+			--output_model_dir $MYHOME/train/step2-1  \
+			--save_interval 1000 \
+			--json_dir   ~/ucllm_nedo_dev/train/Megatron-DeepSpeed/dataset/ \
+			--config_yaml $MYHOME/train/config_step2.yaml
+
+```
+
+yaml ファイルの例
+```yaml
+model_size: 0.125
+num_layers: 12
+hidden_size: 768
+num_attn_heads: 12
+global_batch_size: 256
+lr: 6.0e-4
+min_lr: 1.0e-6
+init_std: 0.02
 ```
 
 ### Step 2. でのトラブルシューティング
