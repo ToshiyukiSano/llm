@@ -418,6 +418,9 @@ LIBEXT = $(shell /absolute/path/to/python3-config --extension-suffix)
 
 ```sh
 (.venv) $ cd ~/ucllm_nedo_dev/train/scripts/step4_finetune_model/
+```
+```sh
+### 分割してないシェルスクリプトを使用する場合
 
 # ファインチューニングスクリプトを実行。 (HuggingFaceにアップロードした事前学習モデルをダウンロードして使用する場合)
 (.venv) $ bash ./gcp_play_node-2_gpu/dataset-openassistant_tokenizer-sentencepiece_model-gpt_0.125B/launcher-deepspeed_zero-3.sh --input_model_name_or_path ${YOUR_HUGGINGFACE_USERNAME}/gpt_0.125B_global_step1000 \
@@ -426,6 +429,42 @@ LIBEXT = $(shell /absolute/path/to/python3-config --extension-suffix)
 # ファインチューニングスクリプトを実行。 (ローカルに保存してある事前学習モデルをそのまま使用する場合)
 (.venv) $ bash ./gcp_play_node-2_gpu/dataset-openassistant_tokenizer-sentencepiece_model-gpt_0.125B/launcher-deepspeed_zero-3.sh --input_model_name_or_path ~/ucllm_nedo_dev/train/output/step3_upload_pretrained_model/gpt_0.125B_global_step1000/ \
     --output_tokenizer_and_model_dir ~/ucllm_nedo_dev/train/output/step4_finetune_model/gpt_0.125B_global_step1000_openassistant/
+```
+```sh
+###分割してあるシェルスクリプトを使用する場合
+
+# 追加学習データ（ファインチューニング用データ）のダウンロード
+
+使用法：
+bash ./gcp_play_node-2_gpu/dataset-openassistant_tokenizer-sentencepiece_model-gpt_0.125B/launcher-deepspeed_zero-3_0_download.sh  \
+	   --json_dir 追加学習データを置くデイレクトリ \
+	   --json_url 追加学習データ（JSON）のURL
+
+使用例：
+bash ./gcp_play_node-2_gpu/dataset-openassistant_tokenizer-sentencepiece_model-gpt_0.125B/launcher-deepspeed_zero-3_0_download.sh  \
+			--json_url https://data.together.xyz/redpajama-data-1T/v1.0.0/arxiv/arxiv_024de5df-1b7f-447c-8c3a-51407d8d6732.jsonl \
+			--json_dir ~/ucllm_nedo_dev/train/Megatron-DeepSpeed/dataset/  
+
+# ファインチューン
+
+使用法：
+bash ./gcp_play_node-2_gpu/dataset-openassistant_tokenizer-sentencepiece_model-gpt_0.125B/launcher-deepspeed_zero-3_1_finetune.sh \
+			--input_model_name_or_path 入力モデル名またはパス     \
+			--output_tokenizer_and_model_dir 出力するディレクトリ  \
+			--json_path ファインチューニング用の学習データ  \
+			--config_yaml 設定ファイル（yaml形式）
+
+使用例：
+bash ./gcp_play_node-2_gpu/dataset-openassistant_tokenizer-sentencepiece_model-gpt_0.125B/launcher-deepspeed_zero-3_1_finetune.sh \
+			--input_model_name_or_path $MYHOME/train/step2-1/gpt_0.125B_step3000/     \
+			--output_tokenizer_and_model_dir $MYHOME/train/step4/finetune_model_local/gpt_0.125B_global_step3000_openassistant/  \
+			--json_path ~/ucllm_nedo_dev/train/llm-jp-sft/dataset/openassistant_best_replies_train.jsonl  \
+			--config_yaml $MYHOME/train/config_step4.yaml
+```
+
+設定ファイルの例（YAML形式）
+```yaml
+lr: 1.0e-5
 ```
 
 ## Step 5. ファインチューニング済みモデルのアップロード
